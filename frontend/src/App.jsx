@@ -1,26 +1,28 @@
 import React, { useState } from 'react';
 
 export default function App() {
-  const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedImages, setSelectedImages] = useState([]);
   const [uploadMessage, setUploadMessage] = useState('');
   const [code, setCode] = useState('');
   const [compileOutput, setCompileOutput] = useState('');
   const [compileErrors, setCompileErrors] = useState('');
 
   const handleImageChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      setSelectedImage(e.target.files[0]);
+    if (e.target.files && e.target.files.length > 0) {
+      setSelectedImages(Array.from(e.target.files));
       setUploadMessage('');
     }
   };
 
   const handleImageUpload = async () => {
-    if (!selectedImage) {
-      setUploadMessage('Please select an image first.');
+    if (selectedImages.length === 0) {
+      setUploadMessage('Please select at least one image.');
       return;
     }
     const formData = new FormData();
-    formData.append('image', selectedImage);
+    selectedImages.forEach((image) => {
+      formData.append('images', image);
+    });
 
     try {
       const response = await fetch('http://localhost:5000/upload-image', {
@@ -74,12 +76,17 @@ export default function App() {
           onChange={handleImageChange}
           className="mb-4"
         />
-        {selectedImage && (
-          <img
-            src={URL.createObjectURL(selectedImage)}
-            alt="Selected"
-            className="mb-4 max-h-64 object-contain border rounded"
-          />
+        {selectedImages.length > 0 && (
+          <div className="mb-4 flex flex-wrap gap-2 max-h-64 overflow-auto border rounded p-2">
+            {selectedImages.map((image, index) => (
+              <img
+                key={index}
+                src={URL.createObjectURL(image)}
+                alt={`Selected ${index + 1}`}
+                className="max-h-24 object-contain rounded"
+              />
+            ))}
+          </div>
         )}
         <button
           onClick={handleImageUpload}
