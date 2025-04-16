@@ -21,14 +21,15 @@ images_collection = db['images']
 @app.route('/upload-image', methods=['POST'])
 def upload_image():
     try:
-        file = request.files.get('image')
-        if not file:
-            return jsonify({'error': 'No image file provided'}), 400
-        # Read file and encode as base64 string
-        encoded_string = base64.b64encode(file.read()).decode('utf-8')
-        # Store in MongoDB
-        images_collection.insert_one({'filename': file.filename, 'data': encoded_string})
-        return jsonify({'message': 'Image uploaded successfully'})
+        files = request.files.getlist('images')
+        if not files or len(files) == 0:
+            return jsonify({'error': 'No image files provided'}), 400
+        inserted_files = []
+        for file in files:
+            encoded_string = base64.b64encode(file.read()).decode('utf-8')
+            images_collection.insert_one({'filename': file.filename, 'data': encoded_string})
+            inserted_files.append(file.filename)
+        return jsonify({'message': f'{len(inserted_files)} images uploaded successfully', 'files': inserted_files})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
