@@ -70,7 +70,8 @@ export default function App() {
       {/* Left side: Image upload */}
       <div className="md:w-1/2 bg-white rounded-lg shadow p-6 flex flex-col">
         <h2 className="text-2xl font-semibold mb-4">Upload Image</h2>
-        <input
+          <input
+            multiple
           type="file"
           accept="image/*"
           onChange={handleImageChange}
