@@ -1,0 +1,128 @@
+import React, { useState } from 'react';
+
+export default function App() {
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [uploadMessage, setUploadMessage] = useState('');
+  const [code, setCode] = useState('');
+  const [compileOutput, setCompileOutput] = useState('');
+  const [compileErrors, setCompileErrors] = useState('');
+
+  const handleImageChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setSelectedImage(e.target.files[0]);
+      setUploadMessage('');
+    }
+  };
+
+  const handleImageUpload = async () => {
+    if (!selectedImage) {
+      setUploadMessage('Please select an image first.');
+      return;
+    }
+    const formData = new FormData();
+    formData.append('image', selectedImage);
+
+    try {
+      const response = await fetch('http://localhost:5000/upload-image', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setUploadMessage(data.message);
+      } else {
+        setUploadMessage(data.error || 'Upload failed');
+      }
+    } catch (error) {
+      setUploadMessage('Upload failed: ' + error.message);
+    }
+  };
+
+  const handleCodeChange = (e) => {
+    setCode(e.target.value);
+  };
+
+  const handleCompile = async () => {
+    setCompileOutput('');
+    setCompileErrors('');
+    try {
+      const response = await fetch('http://localhost:5000/compile-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setCompileOutput(data.output || '');
+        setCompileErrors(data.errors || '');
+      } else {
+        setCompileErrors(data.error || 'Compilation failed');
+      }
+    } catch (error) {
+      setCompileErrors('Compilation failed: ' + error.message);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col md:flex-row p-4 gap-4 bg-gray-100 font-sans">
+      {/* Left side: Image upload */}
+      <div className="md:w-1/2 bg-white rounded-lg shadow p-6 flex flex-col">
+        <h2 className="text-2xl font-semibold mb-4">Upload Image</h2>
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleImageChange}
+          className="mb-4"
+        />
+        {selectedImage && (
+          <img
+            src={URL.createObjectURL(selectedImage)}
+            alt="Selected"
+            className="mb-4 max-h-64 object-contain border rounded"
+          />
+        )}
+        <button
+          onClick={handleImageUpload}
+          className="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition"
+        >
+          Upload
+        </button>
+        {uploadMessage && (
+          <p className="mt-4 text-sm text-gray-700">{uploadMessage}</p>
+        )}
+      </div>
+
+      {/* Right side: Python code compiler */}
+      <div className="md:w-1/2 bg-white rounded-lg shadow p-6 flex flex-col">
+        <h2 className="text-2xl font-semibold mb-4">Python Code Compiler</h2>
+        <textarea
+          value={code}
+          onChange={handleCodeChange}
+          placeholder="Write your Python code here..."
+          className="flex-grow border rounded p-2 mb-4 font-mono text-sm resize-none"
+          rows={15}
+        />
+        <button
+          onClick={handleCompile}
+          className="bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 transition"
+        >
+          Compile & Run
+        </button>
+        <div className="mt-4">
+          <h3 className="font-semibold">Output:</h3>
+          <pre className="bg-gray-100 p-2 rounded min-h-[100px] whitespace-pre-wrap">
+            {compileOutput}
+          </pre>
+          {compileErrors && (
+            <>
+              <h3 className="font-semibold mt-4 text-red-600">Errors:</h3>
+              <pre className="bg-gray-100 p-2 rounded min-h-[100px] whitespace-pre-wrap text-red-600">
+                {compileErrors}
+              </pre>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
