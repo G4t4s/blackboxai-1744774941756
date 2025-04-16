@@ -12,6 +12,8 @@ CORS(app)
 
 # MongoDB connection string from environment variable
 MONGO_URI = os.getenv('MONGO_URI')
+if not MONGO_URI:
+    raise Exception("MONGO_URI environment variable not set. Please set it to your MongoDB Atlas connection string.")
 client = MongoClient(MONGO_URI)
 db = client['image_upload_db']
 images_collection = db['images']
